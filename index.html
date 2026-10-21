@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>5 Easy Quiz</title>
+    <style>
+      :root {
+        --bg: #f4f7fb;
+        --card: #ffffff;
+        --primary: #4f46e5;
+        --primary-dark: #3730a3;
+        --text: #1f2937;
+        --muted: #6b7280;
+        --correct: #16a34a;
+        --wrong: #dc2626;
+        --border: #e5e7eb;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: Arial, Helvetica, sans-serif;
+        background: linear-gradient(135deg, #eef2ff, #f8fafc);
+        color: var(--text);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+      }
+
+      .quiz-card {
+        width: min(700px, 100%);
+        background: var(--card);
+        border-radius: 18px;
+        box-shadow: 0 18px 45px rgba(79, 70, 229, 0.12);
+        padding: 28px 24px;
+      }
+
+      .header {
+        text-align: center;
+        margin-bottom: 24px;
+      }
+
+      .header h1 {
+        margin: 0 0 10px;
+        font-size: clamp(2rem, 3vw, 2.6rem);
+      }
+
+      .header p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 1rem;
+      }
+
+      .progress {
+        height: 10px;
+        background: #e5e7eb;
+        border-radius: 999px;
+        overflow: hidden;
+        margin-bottom: 22px;
+      }
+
+      .progress-bar {
+        height: 100%;
+        width: 0;
+        background: linear-gradient(90deg, var(--primary), #8b5cf6);
+        border-radius: inherit;
+        transition: width 0.3s ease;
+      }
+
+      .question-box {
+        display: none;
+      }
+
+      .question-box.active {
+        display: block;
+      }
+
+      .question-number {
+        display: inline-block;
+        background: #eef2ff;
+        color: var(--primary-dark);
+        font-weight: 700;
+        padding: 8px 12px;
+        border-radius: 999px;
+        margin-bottom: 16px;
+      }
+
+      .question-text {
+        font-size: clamp(1.2rem, 2vw, 1.6rem);
+        margin: 0 0 20px;
+        line-height: 1.4;
+      }
+
+      .answers {
+        display: grid;
+        gap: 12px;
+      }
+
+      .answer-option {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        width: 100%;
+        text-align: left;
+        border: 1px solid rgba(148, 163, 184, 0.35);
+        background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+        border-radius: 14px;
+        padding: 14px 15px;
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text);
+        cursor: pointer;
+        transition: all 0.22s ease;
+        box-shadow: 0 4px 10px rgba(15, 23, 42, 0.04);
+      }
+
+      .answer-option:hover {
+        border-color: rgba(79, 70, 229, 0.55);
+        background: linear-gradient(180deg, #f8faff 0%, #eef2ff 100%);
+        box-shadow: 0 8px 18px rgba(79, 70, 229, 0.1);
+        transform: translateY(-2px);
+      }
+
+      .answer-option.correct {
+        background: linear-gradient(180deg, rgba(22, 163, 74, 0.12), rgba(22, 163, 74, 0.05));
+        border-color: var(--correct);
+        color: #166534;
+        box-shadow: 0 8px 18px rgba(22, 163, 74, 0.12);
+      }
+
+      .answer-option.incorrect {
+        background: linear-gradient(180deg, rgba(220, 38, 38, 0.12), rgba(220, 38, 38, 0.04));
+        border-color: var(--wrong);
+        color: #991b1b;
+        box-shadow: 0 8px 18px rgba(220, 38, 38, 0.1);
+      }
+
+      .answer-option:disabled {
+        cursor: default;
+      }
+
+      .answer-letter {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        background: linear-gradient(180deg, #eef2ff 0%, #e0e7ff 100%);
+        color: var(--primary-dark);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+      }
+
+      .controls {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 24px;
+        gap: 12px;
+      }
+
+      button {
+        border: none;
+        border-radius: 12px;
+        padding: 12px 20px;
+        font-size: 1rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: transform 0.15s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+      }
+
+      button:hover {
+        transform: translateY(-1px);
+      }
+
+      .btn-secondary {
+        background: linear-gradient(180deg, #f3f4f6 0%, #e5e7eb 100%);
+        color: var(--text);
+        box-shadow: 0 4px 10px rgba(15, 23, 42, 0.08);
+      }
+
+      .btn-primary {
+        background: linear-gradient(180deg, #5b57f2 0%, #4f46e5 100%);
+        color: white;
+        box-shadow: 0 8px 18px rgba(79, 70, 229, 0.28);
+      }
+
+      .btn-primary:hover {
+        box-shadow: 0 10px 22px rgba(79, 70, 229, 0.32);
+      }
+
+      .btn-primary:disabled,
+      .btn-secondary:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+      }
+
+      .feedback-popup {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) scale(0.4);
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 4rem;
+        font-weight: 900;
+        opacity: 0;
+        pointer-events: none;
+        z-index: 10;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+      }
+
+      .feedback-popup.show {
+        animation: popup 0.8s ease forwards;
+      }
+
+      .feedback-popup.correct {
+        background: rgba(22, 163, 74, 0.12);
+        color: var(--correct);
+        border: 8px solid rgba(22, 163, 74, 0.8);
+      }
+
+      .feedback-popup.wrong {
+        background: rgba(220, 38, 38, 0.12);
+        color: var(--wrong);
+        border: 8px solid rgba(220, 38, 38, 0.8);
+      }
+
+      @keyframes popup {
+        0% {
+          opacity: 0;
+          transform: translate(-50%, -50%) scale(0.4);
+        }
+        20% {
+          opacity: 1;
+          transform: translate(-50%, -50%) scale(1.15);
+        }
+        40% {
+          transform: translate(-50%, -50%) scale(0.95);
+        }
+        60% {
+          transform: translate(-50%, -50%) scale(1.08);
+        }
+        100% {
+          opacity: 1;
+          transform: translate(-50%, -50%) scale(1);
+        }
+      }
+
+      @media (max-width: 550px) {
+        .quiz-card {
+          padding: 22px 18px;
+        }
+
+        .controls {
+          flex-direction: column;
+        }
+
+        .btn-secondary,
+        .btn-primary {
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="quiz-card">
+      <div class="header">
+        <h1>5 Easy Quiz</h1>
+      </div>
+
+      <div class="progress">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+
+      <div id="quizContainer"></div>
+
+      <div class="feedback-popup" id="feedbackPopup" aria-live="polite"></div>
+
+      <div class="result-box" id="resultBox">
+        <div class="result-message" id="resultMessage"></div>
+      </div>
+    </div>
+
+    <script>
+      const questions = [
+        {
+          question: "What is 2 + 2?",
+          options: ["3", "4", "5", "6"],
+          answer: 1
+        },
+        {
+          question: "Which planet is known as the Red Planet?",
+          options: ["Venus", "Mars", "Jupiter", "Mercury"],
+          answer: 1
+        },
+        {
+          question: "How many days are there in a week?",
+          options: ["5", "6", "7", "8"],
+          answer: 2
+        },
+        {
+          question: "Which animal is the largest mammal?",
+          options: ["Elephant", "Blue Whale", "Giraffe", "Shark"],
+          answer: 1
+        },
+        {
+          question: "What color do you get when you mix blue and yellow?",
+          options: ["Green", "Purple", "Orange", "Red"],
+          answer: 0
+        }
+      ];
+
+      let currentQuestion = 0;
+      let score = 0;
+
+      const quizContainer = document.getElementById("quizContainer");
+      const progressBar = document.getElementById("progressBar");
+      const resultBox = document.getElementById("resultBox");
+      const resultMessage = document.getElementById("resultMessage");
+      const feedbackPopup = document.getElementById("feedbackPopup");
+
+      function showFeedback(isCorrect) {
+        feedbackPopup.textContent = isCorrect ? "✓" : "✕";
+        feedbackPopup.classList.remove("correct", "wrong", "show");
+
+        if (isCorrect) {
+          feedbackPopup.classList.add("correct");
+        } else {
+          feedbackPopup.classList.add("wrong");
+        }
+
+        void feedbackPopup.offsetWidth;
+        feedbackPopup.classList.add("show");
+
+        setTimeout(() => {
+          feedbackPopup.classList.remove("show");
+        }, 900);
+      }
+
+      function renderQuestion() {
+        if (currentQuestion >= questions.length) {
+          showResult();
+          return;
+        }
+
+        const question = questions[currentQuestion];
+        const questionNumber = currentQuestion + 1;
+
+        quizContainer.innerHTML = `
+          <div class="question-box active">
+            <div class="question-number">Question ${questionNumber}/5</div>
+            <h2 class="question-text">${question.question}</h2>
+            <div class="answers">
+              ${question.options
+                .map(
+                  (option, index) => `
+                    <button class="answer-option" data-index="${index}" onclick="checkAnswer(${index})">
+                      <span class="answer-letter">${String.fromCharCode(65 + index)}</span>
+                      <span>${option}</span>
+                    </button>
+                  `
+                )
+                .join("")}
+            </div>
+            <div class="controls">
+              <button class="btn-primary" type="button" disabled>Next</button>
+            </div>
+          </div>
+        `;
+
+        const percent = ((currentQuestion + 1) / questions.length) * 100;
+        progressBar.style.width = `${percent}%`;
+      }
+
+      function checkAnswer(selectedIndex) {
+        const question = questions[currentQuestion];
+        const buttons = document.querySelectorAll(".answer-option");
+
+        buttons.forEach((button) => {
+          button.disabled = true;
+          const index = Number(button.dataset.index);
+          if (index === question.answer) {
+            button.classList.add("correct");
+          }
+          if (index === selectedIndex && index !== question.answer) {
+            button.classList.add("incorrect");
+          }
+        });
+
+        const isCorrect = selectedIndex === question.answer;
+        if (isCorrect) {
+          score += 1;
+        }
+
+        showFeedback(isCorrect);
+
+        const nextBtn = document.querySelector(".btn-primary");
+        nextBtn.disabled = false;
+        nextBtn.textContent = currentQuestion === questions.length - 1 ? "Finish" : "Next";
+        nextBtn.onclick = () => {
+          currentQuestion += 1;
+          renderQuestion();
+        };
+      }
+
+      function showResult() {
+        quizContainer.style.display = "none";
+        resultBox.classList.add("show");
+      }
+
+      function restartQuiz() {
+        currentQuestion = 0;
+        score = 0;
+        resultBox.classList.remove("show");
+        quizContainer.style.display = "block";
+        progressBar.style.width = "0%";
+        renderQuestion();
+      }
+
+      renderQuestion();
+    </script>
+  </body>
+</html>
